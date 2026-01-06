@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,24 +32,24 @@
     
     <div class="controls">
         <div class="input-group">
-            <label>Tamaño Final (px):</label>
+            <label>Final Size (px):</label>
             <input type="number" id="width" value="512"> 
             <span>x</span> 
             <input type="number" id="height" value="512">
         </div>
         <input type="file" id="fileInput" multiple accept="image/*">
-        <button class="btn btn-primary" id="startBtn">Iniciar Procesamiento</button>
+        <button class="btn btn-primary" id="startBtn">Start Processing</button>
     </div>
 
-    <div id="status">Selecciona imágenes para comenzar.</div>
+    <div id="status">Select images to get started.</div>
 
     <div class="crop-area">
         <img id="imageToCrop" src="" alt="">
     </div>
 
     <div style="margin-top: 20px; text-align: right; display: flex; justify-content: space-between; align-items: center;">
-        <small style="color: #777;">* Todas las imágenes se exportarán como .png automáticamente.</small>
-        <button class="btn btn-next" id="nextBtn">Recortar y Siguiente ➔</button>
+        <small style="color: #777;">* All images will be exported as .png automatically.</small>
+        <button class="btn btn-next" id="nextBtn">Crop and Next ➔</button>
     </div>
 </div>
 
@@ -70,11 +70,11 @@
     startBtn.onclick = () => {
         files = Array.from(fileInput.files);
         if (files.length === 0) {
-            alert("Por favor, selecciona al menos una imagen.");
+            alert("Please select at least one image.");
             return;
         }
         
-        // Reiniciar ZIP y contador en caso de un segundo lote
+        // Reset ZIP and counter for a new batch
         zip = new JSZip();
         currentIndex = 0;
         startBtn.style.display = 'none';
@@ -88,7 +88,7 @@
             return;
         }
 
-        status.innerText = `Editando imagen ${currentIndex + 1} de ${files.length}: ${files[currentIndex].name}`;
+        status.innerText = `Editing image ${currentIndex + 1} of ${files.length}: ${files[currentIndex].name}`;
         
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -101,7 +101,7 @@
 
             cropper = new Cropper(imageElement, {
                 aspectRatio: targetW / targetH,
-                viewMode: 1, // Restringe el recorte al área de la imagen
+                viewMode: 1, 
                 autoCropArea: 0.8,
                 responsive: true,
                 restore: false,
@@ -120,7 +120,7 @@
         const targetW = parseInt(document.getElementById('width').value) || 512;
         const targetH = parseInt(document.getElementById('height').value) || 512;
 
-        // 1. Obtener el canvas con el tamaño exacto definido
+        // 1. Get canvas with the exact defined size
         const canvas = cropper.getCroppedCanvas({
             width: targetW,
             height: targetH,
@@ -128,39 +128,39 @@
             imageSmoothingQuality: 'high'
         });
 
-        // 2. Convertir a Blob forzando el formato image/png
+        // 2. Convert to Blob forcing image/png format
         canvas.toBlob((blob) => {
-            // Obtener nombre original sin extensión
+            // Get original name without extension
             const originalFullName = files[currentIndex].name;
             const fileNameWithoutExt = originalFullName.substring(0, originalFullName.lastIndexOf('.')) || originalFullName;
             
-            // 3. Guardar en el ZIP con extensión .png
+            // 3. Save to ZIP with .png extension
             zip.file(`${fileNameWithoutExt}.png`, blob);
             
             currentIndex++;
             loadNextImage();
-        }, 'image/png'); // <--- El formato de salida es PNG
+        }, 'image/png'); 
     };
 
     async function finishZip() {
-        status.innerText = "Generando archivo ZIP... por favor espera.";
+        status.innerText = "Generating ZIP file... please wait.";
         
         try {
             const content = await zip.generateAsync({type: "blob"});
-            saveAs(content, "imagenes_recortadas_png.zip");
+            saveAs(content, "cropped_images_png.zip");
             
-            status.innerText = "¡Listo! El proceso ha finalizado y la descarga ha comenzado.";
+            status.innerText = "Done! The process has finished and your download has started.";
             nextBtn.style.display = 'none';
             startBtn.style.display = 'inline-block';
-            startBtn.innerText = "Procesar otro lote";
+            startBtn.innerText = "Process another batch";
             
-            // Limpiar
+            // Cleanup
             fileInput.value = "";
             if (cropper) cropper.destroy();
             imageElement.src = "";
         } catch (err) {
             console.error(err);
-            status.innerText = "Error al generar el ZIP.";
+            status.innerText = "Error generating the ZIP file.";
         }
     }
 </script>
